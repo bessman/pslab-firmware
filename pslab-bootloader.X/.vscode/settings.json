@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "xc.h": "c",
+        "p24ep256gp204.h": "c",
+        "i2c.h": "c",
+        "stdint.h": "c",
+        "stdbool.h": "c",
+        "stdint-gcc.h": "c",
+        "alltypes.h": "c",
+        "builtins.h": "c"
+    }
+}

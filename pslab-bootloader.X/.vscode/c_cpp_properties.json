@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "PIC24EP256GP204",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/microchip/xc16/v2.00/include/**",
+                "/opt/microchip/xc16/v2.00/support/**"
+            ],
+            "defines": [
+                "__PIC24EP256GP204__",
+                "__prog__="
+            ],
+            "compilerPath": "",
+            "cStandard": "gnu99",
+            "intelliSenseMode": "gcc-x86"
+        }
+    ],
+    "version": 4
+}
