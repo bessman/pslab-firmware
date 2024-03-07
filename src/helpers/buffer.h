@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "commands.h"
+
 #define BUFFER_SIZE     10000
 
 #ifdef	__cplusplus
@@ -41,10 +43,10 @@ extern "C" {
     * @return SUCCESS
     */
     response_t BUFFER_Retrieve(void);
-    
+
     /**
     * @brief Send buffer content as integers.
-    * 
+    *
     * @description
     * This command function takes two arguments over serial:
     * 1. The starting index in the buffer from which to send values.
@@ -52,14 +54,14 @@ extern "C" {
     *
     * It returns the requested data over serial.
     * It sends an acknowledge byte (SUCCESS)
-    * 
+    *
     * @return SUCCESS
     */
     response_t BUFFER_FetchInt(void);
-    
+
     /**
     * @brief Send buffer content as longs.
-    * 
+    *
     * @description
     * This command function takes two arguments over serial:
     * 1. The starting index in the buffer from which to send values.
@@ -67,29 +69,29 @@ extern "C" {
     *
     * It returns the requested data over serial.
     * It sends an acknowledge byte (SUCCESS)
-    * 
+    *
     * @return SUCCESS
     */
     response_t BUFFER_FetchLong(void);
 
     /**
     * @brief Populate BUFFER array
-    * 
+    *
     * @description
     * This command function takes two arguments over serial:
     * 1. The starting index in the buffer from which to fill values.
     * 2. The number of values to be sent.
-    * 
+    *
     * It does not return anything over serial.
     * It sends an acknowledge byte (SUCCESS)
-    * 
+    *
     * @return SUCCESS
     */
     response_t BUFFER_Fill(void);
-    
+
     /**
     * @brief Clear BUFFER array
-    * 
+    *
     * @description
     * This command function takes two arguments over serial:
     * 1. The starting index in the buffer from which it should be emptied
@@ -97,7 +99,7 @@ extern "C" {
     *
     * It does not return anything over serial.
     * It sends an acknowledge byte (SUCCESS)
-    * 
+    *
     * @return SUCCESS
     */
     response_t BUFFER_Clear(void);
