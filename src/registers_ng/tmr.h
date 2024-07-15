@@ -16,6 +16,13 @@ typedef enum TMR_Timer {
     TMR_TIMER_NUMEL,
 } TMR_Timer;
 
+typedef enum TMR_Prescaler {
+    TMR_PRESCALER_1 = 0b00,
+    TMR_PRESCALER_8 = 0b01,
+    TMR_PRESCALER_64 = 0b10,
+    TMR_PRESCALER_256 = 0b11,
+} TMR_Prescaler;
+
 /*************/
 /* Functions */
 /*************/
@@ -56,5 +63,13 @@ static inline void TMR5_start_fast(void)
  * @param period
  */
 void TMR_set_period(TMR_Timer timer, uint16_t period);
+
+/**
+ * @brief Set timer prescaler
+ *
+ * @param timer
+ * @param prescaler
+ */
+void TMR_set_prescaler(TMR_Timer timer, TMR_Prescaler prescaler);
 
 #endif // TMR_H

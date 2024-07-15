@@ -163,3 +163,8 @@ void TMR_set_period(TMR_Timer const timer, uint16_t const period)
 {
     *get_registers(timer).p_pr = period;
 }
+
+void TMR_set_prescaler(TMR_Timer const timer, TMR_Prescaler const prescaler)
+{
+    get_registers(timer).p_conbits->TCKPS = prescaler;
+}
