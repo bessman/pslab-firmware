@@ -1,41 +1,44 @@
 /**
  * @file logic_analyzer.c
  * @author Alexander Bessman (alexander.bessman@gmail.com)
- * @brief High-level driver for the PSLab's Logic Analyzer instrument
+ * @brief High-level driver for the PSLab's Logic Analyzer (LA) instrument
  * @details
- * # Implementation
+ * # Logic Analyzer
+ *
+ * The PSLab's logic analyzer can capture timestamps of logic level changes
+ * ("events" or "edges") on one to four channels (pins LA1-4) simultaneously.
+ *
+ * Three event types can be captured: falling edges, rising edges, or both.
+ *
+ * Optionally, one pin can be set as trigger pin. In that case, capture begins
+ * when the trigger event occurs on the trigger pin. The trigger event is one
+ * of falling, rising, or any edge. The trigger event can be different from the
+ * capture event. The trigger pin does not need to be configured to capture
+ * events, i.e. it is possible to trigger on LA3 even if only LA1 and LA2 are
+ * used to capture events.
+ *
+ * If no pin is set as trigger, capture begins as soon as possible.
+ *
+ * Up to 10000 events can be captured, in total across all four channels.
+ *
+ * ## Implementation
  *
  * The logic analyzer uses the following resources:
  *
- * ## Pins LA1-4
+ * - Pins LA1-4
  *
- * When the logic level on an active pin changes, a timestamp is stored in the
- * sample buffer. Three types of logic level changes (edges) can be captured:
- * ANY, FALLING, or RISING.
+ * When capture begins, the initial states of the pins are recorded.
  *
- * If the configured edge type is ANY, a timestamp is stored every time the
- * logic level changes from low to high, or from high to low.
+ * - Input Capture (IC) channels IC1-4
  *
- * If the configured edge type is RISING, a timestamp is stored every time the
- * logic level changes from low to high, but not from high to low. Vice versa
- * for edge type FALLING.
+ * Each ICx channel is associated with the corresponding LAx pin. When a
+ * capture event is detected on LAx, the current value of ICxTMR is copied to
+ * ICxBUF.
  *
- * Up to 10k timestamps can be captured, across all four channels.
+ * IC interrupt is used to trigger capture, if edge type is FALLING or RISING.
+ * If edge type is ANY, capture is instead triggered by CN.
  *
- * ## Input Capture (IC) channels IC1-4
- *
- * Each ICx channel is associated with the corresponding LAx pin. When the
- * configured edge type is detected on LAx, the current value of ICxTMR is
- * copied to ICxBUF.
- *
- * IC interrupt is used to trigger delayed capture, if edge type is FALLING or
- * RISING. If edge type is ANY, delayed capture is instead triggered by CN.
- *
- * ## Input Change Notification (CN)
- *
- * One pin may be designated as the trigger pin, in which case capture begins
- * when the configured edge type is detected on that pin. If no pin is selected
- * as trigger, capture begins immediatedely.
+ * - Change Notification (CN)
  *
  * If the edge type is ANY, CN interrupt is used to start capture. If the edge
  * type is FALLING or RISING, IC interrupt is used instead.
@@ -44,22 +47,21 @@
  * occurs on the trigger pin, capture does not start. The instrument must be
  * reset by calling `LA_stop`.
  *
- * ## Timer TMR5
+ * - Timer TMR5
  *
- * When the trigger condition is met, TMR5 is started. TMR5 is used as trigger
- * source to start the enabled IC channels' ICxTMR, as well as clock source to
- * clock the same.
+ * When the trigger condition is met, all configured ICx are started, followed
+ * by TMR5. TMR5, in turn, triggers and clocks ICxTMR.
  *
- * ## Direct Memory Access (DMA) channels DMA0-3
+ * - Direct Memory Access (DMA) channels DMA0-3
  *
  * ICx drives DMA(x-1). Every time a new value is copied to ICxBUF, DMA(x-1)
  * copies it to the sample buffer.
  *
- * When the requested number of timestamps have been captured on LAx, DMA(x-1)
+ * When the requested number of events have been captured on LAx, DMA(x-1)
  * interrupts and resets itself and ICx. If ICx is the last active channel,
  * TMR5 is reset.
  *
- * ## Sample Buffer
+ * - Sample Buffer
  *
  * Captured timestamps are stored in the sample buffer.
  */
@@ -87,7 +89,6 @@
  * @brief Instrument state
  */
 struct LogicAnalyzerState {
-    bool locked;
     uint8_t configured_channels;
     uint8_t active_channels;
     Edge capture_edge;
@@ -160,7 +161,6 @@ static TMR_Timer const g_TIMER = TMR_TIMER_5;
 /***********/
 
 static struct LogicAnalyzerState volatile g_state = {
-    .locked = false,
     .configured_channels = 0,
     .active_channels = 0,
     .capture_edge = EDGE_NONE,
@@ -171,7 +171,6 @@ static struct LogicAnalyzerState volatile g_state = {
     .final_progress = {0},
 };
 static struct LogicAnalyzerState const g_STATE_DEFAULT = {
-    .locked = false,
     .configured_channels = 0,
     .active_channels = 0,
     .capture_edge = EDGE_NONE,
@@ -255,8 +254,6 @@ static void cleanup_callback(Channel const channel)
     // Reset the clock if this was the last active channel.
     if (!active_channels) {
         TMR_reset(g_TIMER);
-        // Release instrument.
-        g_state.locked = false;
     }
 }
 
@@ -266,8 +263,6 @@ static void setup(
     Edge const edge
 )
 {
-    // Lock instrument to prevent reuse before capture is complete.
-    g_state.locked = true;
     // Store instrument state for use in e.g. interrupt callbacks.
     g_state.configured_channels = num_channels;
     g_state.capture_edge = edge;
@@ -336,7 +331,7 @@ response_t LA_capture(void)
     Channel const trigger_pin = (int8_t)UART1_Read();
     Edge const trigger_edge = (int8_t)UART1_Read();
 
-    if (g_state.locked) {
+    if (g_state.active_channels) {
         return FAILED;
     }
 
@@ -363,7 +358,7 @@ response_t LA_capture(void)
 
 response_t LA_stop(void)
 {
-    if (!g_state.locked) {
+    if (!g_state.active_channels) {
         // Logic analyzer is already stopped.
         return SUCCESS;
     }
@@ -377,7 +372,7 @@ response_t LA_stop(void)
         DMA_reset(i);
     }
 
-    g_state.locked = false;
+    g_state.active_channels = 0;
     return SUCCESS;
 }
 
@@ -391,7 +386,7 @@ response_t LA_get_progress(void)
 {
     uint8_t const channels = g_state.configured_channels;
     UART1_Write(channels);
-    bool const done = !g_state.locked;
+    bool const done = !g_state.active_channels;
     UART1_Write(done);
 
     for (uint8_t i = 0; i < channels; ++i) {
