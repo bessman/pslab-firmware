@@ -40,6 +40,10 @@
  * If the edge type is ANY, CN interrupt is used to start capture. If the edge
  * type is FALLING or RISING, IC interrupt is used instead.
  *
+ * When using delayed capture, there is no timeout. If the trigger edge never
+ * occurs on the trigger pin, capture does not start. The instrument must be
+ * reset by calling `LA_stop`.
+ *
  * ## Timer TMR5
  *
  * When the trigger condition is met, TMR5 is started. TMR5 is used as trigger
