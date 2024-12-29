@@ -6,7 +6,7 @@
 /**********/
 /* Macros */
 /**********/
-#define UART_READ_TIMEOUT (FCY / 10)  // 100 ms
+#define UART_READ_TIMEOUT (FCY / 1000)  // 1 ms
 
 /**************/
 /* Interrupts */
@@ -329,7 +329,7 @@ void UART_Initialize(const EUxSelect select) {
 
 uint8_t UART_Read(const EUxSelect select) {
     // Wait for data to become available.
-    uint32_t timeout = 0;
+    uint16_t timeout = 0;
     while (timeout++ < UART_READ_TIMEOUT) {
         if (UART_IsRxReady(select)) {
             break;
