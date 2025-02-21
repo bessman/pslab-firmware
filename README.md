@@ -70,6 +70,12 @@ make
 This will create a build artifact in the `build` directory:
 `pslab-firmware.hex`.
 
+To build this project for the PSLab v5, add the `LEGACY_HARDWARE` environment variable to the `cmake` command:
+
+```bash
+cmake -DLEGACY_HARDWARE=true ..
+```
+
 ## Flashing
 
 The firmware can be flashed over USB or by using a programmer such as the
@@ -80,8 +86,10 @@ PICkit3.
 Firmware can be flashed over USB if the device already has the
 [bootloader](https://github.com/fossasia/pslab-bootloader) installed.
 
-Flashing the firmware requires the pslab-python library. See
-[pslab-python](https://github.com/fossasia/pslab-python) for installation
+Flashing the firmware requires mcbootblash which can be installed standalone
+or as a dependency of the pslab-python library.
+See [mcbootflash](https://github.com/bessman/mcbootflash)
+or [pslab-python](https://github.com/fossasia/pslab-python) for installation
 instructions.
 
 Follow these steps to flash new firmware:
@@ -96,7 +104,7 @@ Follow these steps to flash new firmware:
 
    2. Release the 'BOOT' button
 
-3. Run `pslab flash --port <portname> firmware.hex`
+3. Run `mcbootflash --port <portname> -b 460800 firmware.hex`
 
 4. After flashing is complete, reset or power cycle the device
 
