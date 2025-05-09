@@ -1,5 +1,6 @@
 target_sources(pslab-firmware.elf PRIVATE
   logic_analyzer.c
+  oscilloscope.c
   powersource.c
 )
 

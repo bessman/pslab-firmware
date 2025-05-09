@@ -72,6 +72,11 @@ static void pin_enable(enum CNENB_Bits pin);
 static void pin_disable(enum CNENB_Bits pin);
 
 /**
+ * @brief Disable CN on all pins
+ */
+static void pin_disable_all(void);
+
+/**
  * @brief Default interrupt callback
  *
  * Disables the CN interrupt.
@@ -155,6 +160,13 @@ static inline void pin_disable(enum CNENB_Bits const pin)
     PINS_REG &= ~pin;
 }
 
+static inline void pin_disable_all(void)
+{
+    PINS_REG &= ~(
+        CNENB_BITS_LA1 | CNENB_BITS_LA2 | CNENB_BITS_LA3 | CNENB_BITS_LA4
+    );
+}
+
 static void default_callback(__attribute__((unused)) Channel const channel)
 {
     interrupt_disable();
@@ -168,10 +180,7 @@ enum Status CN_reset(void)
 {
     interrupt_disable();
     interrupt_clear();
-    uint16_t const valid_pins = (
-        CNENB_BITS_LA1 | CNENB_BITS_LA2 | CNENB_BITS_LA3 | CNENB_BITS_LA4
-    );
-    PINS_REG &= ~valid_pins;
+    pin_disable_all();
     g_callback = default_callback;
     return E_OK;
 }

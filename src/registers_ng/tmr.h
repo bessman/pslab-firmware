@@ -48,17 +48,19 @@ static uint16_t const TMR_prescaler_vals[TMR_N_PRESCALERS] = {
 enum Status TMR_reset(TMR_Timer tmr);
 
 /**
- * @brief Set timer period and prescaler.
+ * @brief Convert a nanosecond value to timer period and prescaler values
  *
- * @param tmr
- *   TMR_Timer object.
+ * @param[in] ns
+ *   Desired timer period in nanoseconds.
  *
- * @param period
- *   Timer period in ns.
+ * @param[out] pr
+ *   Pass this value to TMR_set_period.
+ *
+ * @param[out] tckps
+ *   Pass this value to TMR_set_prescaler.
  *
  * @return enum Status
  */
-
  enum Status TMR_get_period_prescaler(
     uint32_t ns,
     uint16_t *pr,

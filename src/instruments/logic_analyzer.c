@@ -376,6 +376,7 @@ enum Status LA_fetch(uint16_t **buffer, uint16_t *n_items)
     *n_items = g_buffer_n_items;
     g_buffer = NULL;
     g_buffer_n_items = 0;
+    g_n_channels = 0;
     return E_OK;
 }
 
